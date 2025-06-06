@@ -13,17 +13,16 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(to right, #e0f7fa, #ffffff);
       margin: 0;
-      padding: 0;
+      padding: 2rem;
       display: flex;
       justify-content: center;
       min-height: 100vh;
     }
 
-    .container {
+    #container {
       background-color: #ffffff;
       width: 100%;
       max-width: 550px;
-      margin: 2rem;
       padding: 2rem;
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -51,7 +50,7 @@
       border-radius: 10px;
     }
 
-    input[type="text"] {
+    input[type="text"]#itemInput {
       flex: 2 1 60%;
     }
 
@@ -79,6 +78,8 @@
       list-style: none;
       padding: 0;
       margin: 0;
+      max-height: 300px;
+      overflow-y: auto;
     }
 
     li {
@@ -138,6 +139,8 @@
       cursor: pointer;
       align-self: center;
       margin-top: 0.5rem;
+      width: 100%;
+      max-width: 300px;
     }
 
     .clear-button:hover {
@@ -189,7 +192,7 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <div id="container">
     <h1>🛒 Einkaufsliste</h1>
     <form id="form">
       <input type="text" id="itemInput" placeholder="Artikelname" required />
