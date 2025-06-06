@@ -44,7 +44,7 @@
       gap: 0.5rem;
     }
 
-    input, select, button {
+    input, button {
       padding: 0.6rem;
       font-size: 1rem;
       border: 1px solid #ccc;
@@ -57,10 +57,6 @@
 
     input[type="text"]#amountInput {
       flex: 1 1 30%;
-    }
-
-    select {
-      flex: 1 1 100%;
     }
 
     button[type="submit"] {
@@ -82,68 +78,27 @@
     }
 
     li {
+      background-color: #f9f9f9;
+      margin-bottom: 0.6rem;
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      border-radius: 12px;
-      background: #f4f6f8;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-      transition: background 0.3s;
-    }
-
-    li:hover {
-      background: #e8f5e9;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
 
     .left {
       display: flex;
       align-items: center;
-      gap: 0.8rem;
+      gap: 0.6rem;
       flex: 1;
     }
 
-    .info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
     .item-text {
-      font-size: 1rem;
-      font-weight: 600;
+      font-weight: 500;
       color: #333;
-    }
-
-    .amount-text {
-      font-size: 0.85rem;
-      color: #00695c;
-      cursor: pointer;
-    }
-
-    .amount-input {
-      width: 60px;
-      font-size: 1rem;
-      padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      text-align: right;
-    }
-
-    .category-badge {
-      background-color: #e0f2f1;
-      color: #00796b;
-      font-size: 0.75rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: 8px;
-      white-space: nowrap;
-    }
-
-    .right {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      user-select: none;
     }
 
     .delete {
@@ -154,14 +109,15 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.8rem;
+      margin-left: 1rem;
+      transition: background 0.3s;
     }
 
     .delete:hover {
       background-color: #b71c1c;
     }
 
-    .clear-button,
-    .whatsapp-button {
+    .clear-button {
       background-color: #f57c00;
       color: white;
       border: none;
@@ -173,10 +129,50 @@
       margin-top: 0.5rem;
     }
 
+    .clear-button:hover {
+      background-color: #e65100;
+    }
+
     .whatsapp-button {
       background-color: #25d366;
-      max-width: 300px;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      align-self: center;
+      margin-top: 0.25rem;
       width: 100%;
+      max-width: 300px;
+    }
+
+    .whatsapp-button:hover {
+      background-color: #1ebe57;
+    }
+
+    .checked .item-text {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .amount-text {
+      font-weight: 600;
+      color: #00796b;
+      margin-right: 8px;
+      cursor: pointer;
+      min-width: 60px;
+      user-select: none;
+      text-align: right;
+    }
+
+    .amount-input {
+      width: 60px;
+      font-size: 1rem;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      text-align: right;
     }
   </style>
 </head>
@@ -186,13 +182,6 @@
     <form id="form">
       <input type="text" id="itemInput" placeholder="Artikelname" required />
       <input type="text" id="amountInput" placeholder="Menge (z. B. 2x)" required />
-      <select id="categorySelect">
-        <option value="Sonstiges">Sonstiges</option>
-        <option value="Obst & Gemüse">Obst & Gemüse</option>
-        <option value="Getränke">Getränke</option>
-        <option value="Milchprodukte">Milchprodukte</option>
-        <option value="Backwaren">Backwaren</option>
-      </select>
       <button type="submit">Hinzufügen</button>
     </form>
 
@@ -206,7 +195,6 @@
     const form = document.getElementById("form");
     const itemInput = document.getElementById("itemInput");
     const amountInput = document.getElementById("amountInput");
-    const categorySelect = document.getElementById("categorySelect");
     const list = document.getElementById("list");
     const clearBtn = document.getElementById("clearBtn");
     const shareBtn = document.getElementById("shareBtn");
@@ -221,6 +209,7 @@
       list.innerHTML = "";
       items.forEach((item, index) => {
         const li = document.createElement("li");
+        if (item.checked) li.classList.add("checked");
 
         const left = document.createElement("div");
         left.classList.add("left");
@@ -229,23 +218,25 @@
         checkbox.type = "checkbox";
         checkbox.checked = item.checked;
         checkbox.addEventListener("change", () => {
-          item.checked = checkbox.checked;
+          items[index].checked = checkbox.checked;
           saveToLocalStorage();
           renderList();
         });
 
-        const info = document.createElement("div");
-        info.classList.add("info");
-
         const spanName = document.createElement("span");
         spanName.classList.add("item-text");
         spanName.textContent = item.name;
+
+        const amountContainer = document.createElement("div");
+        amountContainer.style.display = "flex";
+        amountContainer.style.alignItems = "center";
 
         const amountText = document.createElement("span");
         amountText.classList.add("amount-text");
         amountText.textContent = item.amount;
         amountText.title = "Klicke, um Menge zu bearbeiten";
         amountText.tabIndex = 0;
+
         amountText.addEventListener("click", () => startEditingAmount(index, amountText));
         amountText.addEventListener("keydown", (e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -253,19 +244,6 @@
             startEditingAmount(index, amountText);
           }
         });
-
-        info.appendChild(spanName);
-        info.appendChild(amountText);
-
-        left.appendChild(checkbox);
-        left.appendChild(info);
-
-        const right = document.createElement("div");
-        right.classList.add("right");
-
-        const categorySpan = document.createElement("span");
-        categorySpan.classList.add("category-badge");
-        categorySpan.textContent = item.category;
 
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "✖";
@@ -277,11 +255,14 @@
           renderList();
         });
 
-        right.appendChild(categorySpan);
-        right.appendChild(deleteBtn);
+        amountContainer.appendChild(amountText);
+
+        left.appendChild(checkbox);
+        left.appendChild(spanName);
+        left.appendChild(amountContainer);
 
         li.appendChild(left);
-        li.appendChild(right);
+        li.appendChild(deleteBtn);
         list.appendChild(li);
       });
     }
@@ -291,22 +272,28 @@
       input.type = "text";
       input.value = items[index].amount;
       input.classList.add("amount-input");
+
       amountText.replaceWith(input);
       input.focus();
+      input.select();
 
-      input.addEventListener("blur", () => saveAmountEdit(index, input));
       input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
+          e.preventDefault();
           saveAmountEdit(index, input);
         } else if (e.key === "Escape") {
           cancelAmountEdit(input, amountText);
         }
       });
+
+      input.addEventListener("blur", () => {
+        saveAmountEdit(index, input);
+      });
     }
 
     function saveAmountEdit(index, input) {
       const newValue = input.value.trim();
-      if (newValue) {
+      if (newValue.length > 0) {
         items[index].amount = newValue;
         saveToLocalStorage();
       }
@@ -319,11 +306,12 @@
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+
       const name = itemInput.value.trim();
       const amount = amountInput.value.trim();
-      const category = categorySelect.value;
+
       if (name && amount) {
-        items.push({ name, amount, category, checked: false });
+        items.push({ name, amount, checked: false });
         saveToLocalStorage();
         renderList();
         form.reset();
@@ -344,10 +332,12 @@
         alert("Die Liste ist leer und kann nicht geteilt werden.");
         return;
       }
+
       let message = "🛒 Meine Einkaufsliste:\n";
       items.forEach(item => {
-        message += `• ${item.amount} ${item.name} (${item.category})\n`;
+        message += `• ${item.amount} ${item.name}\n`;
       });
+
       const url = "https://wa.me/?text=" + encodeURIComponent(message);
       window.open(url, "_blank");
     });
