@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Einkaufsliste</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 550px;
+      margin: 2rem;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #00695c;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    input, select, button {
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+
+    input[type="text"] {
+      flex: 2 1 60%;
+    }
+
+    input[type="text"]#amountInput {
+      flex: 1 1 30%;
+    }
+
+    select {
+      flex: 1 1 100%;
+    }
+
+    button[type="submit"] {
+      background-color: #00796b;
+      color: white;
+      border: none;
+      cursor: pointer;
+      flex: 1 1 100%;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #004d40;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background-color: #f9f9f9;
+      margin-bottom: 0.6rem;
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex: 1;
+    }
+
+    .item-text {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .category {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .delete {
+      background-color: #e53935;
+      border: none;
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-left: 1rem;
+      transition: background 0.3s;
+    }
+
+    .delete:hover {
+      background-color: #b71c1c;
+    }
+
+    .clear-button {
+      background-color: #f57c00;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      align-self: center;
+      margin-top: 0.5rem;
+    }
+
+    .clear-button:hover {
+      background-color: #e65100;
+    }
+
+    .whatsapp-button {
+      background-color: #25d366;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      align-self: center;
+    }
+
+    .whatsapp-button:hover {
+      background-color: #1ebe57;
+    }
+
+    .checked .item-text {
+      text-decoration: line-through;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛒 Einkaufsliste</h1>
+    <form id="form">
+      <input type="text" id="itemInput" placeholder="Artikelname" required />
+      <input type="text" id="amountInput" placeholder="Menge (z. B. 2x)" required />
+      <select id="categorySelect">
+        <option value="Sonstiges">Sonstiges</option>
+        <option value="Obst & Gemüse">Obst & Gemüse</option>
+        <option value="Getränke">Getränke</option>
+        <option value="Milchprodukte">Milchprodukte</option>
+        <option value="Backwaren">Backwaren</option>
+      </select>
+      <button type="submit">Hinzufügen</button>
+    </form>
+
+    <ul id="list"></ul>
+
+    <button class="clear-button" id="clearBtn">🗑️ Liste löschen</button>
+    <button class="whatsapp-button" id="shareBtn">📤 Teilen via WhatsApp</button>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const itemInput = document.getElementById("itemInput");
+    const amountInput = document.getElementById("amountInput");
+    const categorySelect = document.getElementById("categorySelect");
+    const list = document.getElementById("list");
+    const clearBtn = document.getElementById("clearBtn");
+    const shareBtn = document.getElementById("shareBtn");
+
+    // Lade gespeicherte Items oder initialisiere leeres Array
+    let items = JSON.parse(localStorage.getItem("einkaufsliste")) || [];
+
+    function saveToLocalStorage() {
+      localStorage.setItem("einkaufsliste", JSON.stringify(items));
+    }
+
+    function renderList() {
+      list.innerHTML = "";
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        if (item.checked) li.classList.add("checked");
+
+        const left = document.createElement("div");
+        left.classList.add("left");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item.checked;
+        checkbox.addEventListener("change", () => {
+          items[index].checked = checkbox.checked;
+          saveToLocalStorage();
+          renderList();
+        });
+
+        const span = document.createElement("span");
+        span.classList.add("item-text");
+        span.textContent = `${item.name} – ${item.amount}`;
+
+        const cat = document.createElement("div");
+        cat.classList.add("category");
+        cat.textContent = item.category;
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "✖";
+        deleteBtn.classList.add("delete");
+        deleteBtn.title = "Entfernen";
+        deleteBtn.addEventListener("click", () => {
+          items.splice(index, 1);
+          saveToLocalStorage();
+          renderList();
+        });
+
+        const itemInfo = document.createElement("div");
+        itemInfo.appendChild(span);
+        itemInfo.appendChild(cat);
+
+        left.appendChild(checkbox);
+        left.appendChild(itemInfo);
+
+        li.appendChild(left);
+        li.appendChild(deleteBtn);
+        list.appendChild(li);
+      });
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const name = itemInput.value.trim();
+      const amount = amountInput.value.trim();
+      const category = categorySelect.value;
+
+      if (name && amount) {
+        items.push({ name, amount, category, checked: false });
+        saveToLocalStorage();
+        renderList();
+        form.reset();
+        itemInput.focus();
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      if (confirm("Möchtest du wirklich die gesamte Liste löschen?")) {
+        items = [];
+        saveToLocalStorage();
+        renderList();
+      }
+    });
+
+    shareBtn.addEventListener("click", () => {
+      if (items.length === 0) {
+        alert("Die Liste ist leer und kann nicht geteilt werden.");
+        return;
+      }
+
+      let message = "🛒 Meine Einkaufsliste:\n";
+      items.forEach(item => {
+        message += `• ${item.amount} ${item.name} (${item.category})\n`;
+      });
+
+      const url = "https://wa.me/?text=" + encodeURIComponent(message);
+      window.open(url, "_blank");
+    });
+
+    // Direkt beim Laden der Seite Liste rendern
+    renderList();
+  </script>
+</body>
+</html>
