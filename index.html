@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Einkaufsliste</title>
   <style>
     * {
@@ -22,7 +22,7 @@
     .container {
       background-color: #ffffff;
       width: 100%;
-      max-width: 900px;
+      max-width: 550px;
       margin: 2rem;
       padding: 2rem;
       border-radius: 15px;
@@ -102,11 +102,14 @@
     .item-text {
       font-weight: 500;
       color: #333;
+      user-select: none;
     }
 
     .category {
       font-size: 0.85rem;
       color: #666;
+      margin-left: 12px;
+      white-space: nowrap;
     }
 
     .delete {
@@ -150,6 +153,9 @@
       font-size: 1rem;
       cursor: pointer;
       align-self: center;
+      margin-top: 0.25rem;
+      width: 100%;
+      max-width: 300px;
     }
 
     .whatsapp-button:hover {
@@ -160,6 +166,26 @@
       text-decoration: line-through;
       color: gray;
     }
+
+    /* Editable amount styles */
+    .amount-text {
+      font-weight: 600;
+      color: #00796b;
+      margin-right: 8px;
+      cursor: pointer;
+      min-width: 60px;
+      user-select: none;
+      text-align: right;
+    }
+
+    .amount-input {
+      width: 60px;
+      font-size: 1rem;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -167,7 +193,7 @@
     <h1>🛒 Einkaufsliste</h1>
     <form id="form">
       <input type="text" id="itemInput" placeholder="Artikelname" required />
-      <input type="text" id="amountInput" placeholder="Menge (z. B. Anzahl oder Gewicht)" required />
+      <input type="text" id="amountInput" placeholder="Menge (z. B. 2x)" required />
       <select id="categorySelect">
         <option value="Sonstiges">Sonstiges</option>
         <option value="Obst & Gemüse">Obst & Gemüse</option>
@@ -193,7 +219,6 @@
     const clearBtn = document.getElementById("clearBtn");
     const shareBtn = document.getElementById("shareBtn");
 
-    // Lade gespeicherte Items oder initialisiere leeres Array
     let items = JSON.parse(localStorage.getItem("einkaufsliste")) || [];
 
     function saveToLocalStorage() {
@@ -218,13 +243,33 @@
           renderList();
         });
 
-        const span = document.createElement("span");
-        span.classList.add("item-text");
-        span.textContent = `${item.name} – ${item.amount}`;
+        const spanName = document.createElement("span");
+        spanName.classList.add("item-text");
+        spanName.textContent = item.name;
 
-        const cat = document.createElement("div");
-        cat.classList.add("category");
-        cat.textContent = item.category;
+        const amountContainer = document.createElement("div");
+        amountContainer.style.display = "flex";
+        amountContainer.style.alignItems = "center";
+        amountContainer.style.gap = "6px";
+
+        const amountText = document.createElement("span");
+        amountText.classList.add("amount-text");
+        amountText.textContent = item.amount;
+
+        amountText.title = "Klicke, um Menge zu bearbeiten";
+        amountText.tabIndex = 0;
+
+        amountText.addEventListener("click", () => startEditingAmount(index, amountText));
+        amountText.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            startEditingAmount(index, amountText);
+          }
+        });
+
+        const categorySpan = document.createElement("span");
+        categorySpan.classList.add("category");
+        categorySpan.textContent = item.category;
 
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "✖";
@@ -236,17 +281,68 @@
           renderList();
         });
 
-        const itemInfo = document.createElement("div");
-        itemInfo.appendChild(span);
-        itemInfo.appendChild(cat);
+        amountContainer.appendChild(amountText);
 
         left.appendChild(checkbox);
-        left.appendChild(itemInfo);
+        left.appendChild(spanName);
+        left.appendChild(amountContainer);
+        left.appendChild(categorySpan);
 
         li.appendChild(left);
         li.appendChild(deleteBtn);
         list.appendChild(li);
       });
+    }
+
+    function startEditingAmount(index, amountText) {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = items[index].amount;
+      input.classList.add("amount-input");
+      input.size = Math.max(input.value.length, 3);
+
+      amountText.replaceWith(input);
+      input.focus();
+      input.select();
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          saveAmountEdit(index, input);
+        } else if (e.key === "Escape") {
+          cancelAmountEdit(input, amountText);
+        }
+      });
+
+      input.addEventListener("blur", () => {
+        saveAmountEdit(index, input);
+      });
+    }
+
+    function saveAmountEdit(index, input) {
+      const newValue = input.value.trim();
+      if (newValue.length > 0) {
+        items[index].amount = newValue;
+        saveToLocalStorage();
+      }
+      const newAmountText = document.createElement("span");
+      newAmountText.classList.add("amount-text");
+      newAmountText.textContent = items[index].amount;
+      newAmountText.title = "Klicke, um Menge zu bearbeiten";
+      newAmountText.tabIndex = 0;
+      newAmountText.addEventListener("click", () => startEditingAmount(index, newAmountText));
+      newAmountText.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          startEditingAmount(index, newAmountText);
+        }
+      });
+
+      input.replaceWith(newAmountText);
+    }
+
+    function cancelAmountEdit(input, amountText) {
+      input.replaceWith(amountText);
     }
 
     form.addEventListener("submit", function (e) {
@@ -288,7 +384,6 @@
       window.open(url, "_blank");
     });
 
-    // Direkt beim Laden der Seite Liste rendern
     renderList();
   </script>
 </body>
